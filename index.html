@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Bangumi 年鉴</title>
+<style>
+:root{
+  --bg:#0d1017; --card:#151a24; --card2:#1a2130; --line:#232c3d;
+  --txt:#e8edf5; --sub:#8b98ac; --acc:#f09199; --acc2:#7ec8f2;
+  --gold:#f5c542; --green:#79d69f; --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+body{
+  background:var(--bg); color:var(--txt);
+  font:15px/1.6 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  min-height:100vh;
+}
+a{color:var(--acc2);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 60px}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:baseline;gap:12px;margin:6px 0 18px}
+header h1{font-size:22px;font-weight:800;letter-spacing:.5px}
+header h1 em{font-style:normal;color:var(--acc)}
+header .tag{font-size:12px;color:var(--sub);border:1px solid var(--line);border-radius:99px;padding:2px 10px}
+
+/* ---------- input card ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.hero{margin-bottom:14px}
+.formrow{display:flex;gap:10px;flex-wrap:wrap}
+#uid{
+  flex:1 1 220px;min-width:200px;background:var(--card2);border:1px solid var(--line);
+  color:var(--txt);border-radius:10px;padding:10px 14px;font-size:15px;outline:none;transition:border .2s;
+}
+#uid:focus{border-color:var(--acc)}
+select{
+  background:var(--card2);border:1px solid var(--line);color:var(--txt);
+  border-radius:10px;padding:10px 10px;font-size:14px;outline:none;cursor:pointer;
+}
+button{cursor:pointer;border:none;border-radius:10px;font-size:14px;transition:transform .15s,opacity .2s,background .2s;font-family:inherit}
+button:active{transform:scale(.97)}
+#go{background:linear-gradient(135deg,var(--acc),#e4727c);color:#fff;font-weight:700;padding:10px 26px;font-size:15px}
+#go:disabled{opacity:.55;cursor:wait}
+.ghost{background:transparent;border:1px solid var(--line);color:var(--sub);padding:9px 14px}
+.ghost:hover{color:var(--txt);border-color:var(--acc)}
+.hint{font-size:12px;color:var(--sub);margin-top:10px}
+.hint b{color:var(--acc2);font-weight:600}
+
+/* source toggle */
+.seg{display:inline-flex;background:var(--card2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{background:transparent;color:var(--sub);padding:9px 16px;border-radius:0}
+.seg button.on{background:var(--acc);color:#fff;font-weight:600}
+
+/* ---------- progress / error ---------- */
+#prog{height:3px;background:var(--line);border-radius:99px;margin:14px 0;overflow:hidden;opacity:0;transition:opacity .3s}
+#prog.show{opacity:1}
+#prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:99px;transition:width .35s ease}
+#ptext{font-size:12px;color:var(--sub);text-align:center;margin-top:-8px;min-height:16px}
+#err{
+  display:none;background:#2a161a;border:1px solid #5d2a33;color:#f4a7ae;
+  border-radius:var(--radius);padding:14px 16px;margin:10px 0;font-size:14px;
+}
+#err b{display:block;margin-bottom:4px}
+#err button{margin-top:8px;background:#5d2a33;color:#fff;padding:6px 14px}
+
+/* ---------- user head ---------- */
+#report{display:none}
+.uhead{display:flex;align-items:center;gap:14px;margin:18px 0 14px}
+.uhead img{width:56px;height:56px;border-radius:50%;border:2px solid var(--acc);background:var(--card2)}
+.uhead .nm{font-size:20px;font-weight:700}
+.uhead .sg{font-size:12px;color:var(--sub)}
+
+/* ---------- stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.stat .v{font-size:26px;font-weight:800;color:var(--acc)}
+.stat .k{font-size:12px;color:var(--sub);margin-top:2px}
+
+/* ---------- charts ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}}
+.chart{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.chart h3{font-size:13px;color:var(--sub);font-weight:600;margin-bottom:10px}
+.bars{display:flex;align-items:flex-end;gap:4px;height:110px}
+.bars .b{flex:1;background:linear-gradient(180deg,var(--acc),#a34c54);border-radius:4px 4px 0 0;min-height:2px;position:relative;transition:height .5s ease}
+.bars .b:hover::after{
+  content:attr(data-v);position:absolute;bottom:105%;left:50%;transform:translateX(-50%);
+  background:#000;border:1px solid var(--line);padding:2px 8px;border-radius:6px;font-size:11px;white-space:nowrap;
+}
+.bars .b span{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:10px;color:var(--sub)}
+.barswrap{padding-bottom:20px}
+.hbar{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:12px;color:var(--sub)}
+.hbar .lab{width:52px;text-align:right;flex:none}
+.hbar .track{flex:1;background:var(--card2);border-radius:99px;height:14px;overflow:hidden}
+.hbar .fill{height:100%;background:linear-gradient(90deg,#a34c54,var(--acc));border-radius:99px;transition:width .5s ease}
+.hbar .num{width:34px;flex:none}
+
+/* ---------- tags ---------- */
+.tags{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tags span{cursor:pointer;color:var(--acc2);opacity:.85;transition:.2s}
+.tags span:hover{opacity:1;text-decoration:underline}
+.tags span.on{color:var(--acc);font-weight:700;text-decoration:underline}
+
+/* ---------- top list ---------- */
+.toprow{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:thin}
+.toprow::-webkit-scrollbar{height:6px}
+.toprow::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px}
+.tcard{flex:none;width:110px}
+.tcard img{width:110px;height:154px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block}
+.tcard .t{font-size:12px;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tcard .r{color:var(--gold);font-size:12px;font-weight:700}
+
+/* ---------- wall ---------- */
+.month{margin:22px 0 6px}
+.month h3{font-size:16px;font-weight:700;display:flex;align-items:baseline;gap:8px}
+.month h3 small{font-size:12px;color:var(--sub);font-weight:400}
+.month h3::after{content:"";flex:1;height:1px;background:var(--line)}
+.gridwall{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:9px;margin-top:10px}
+.ccard{position:relative;transition:transform .2s}
+.ccard:hover{transform:translateY(-3px)}
+.ccard img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block;background:var(--card2)}
+.ccard .rate{
+  position:absolute;top:6px;right:6px;background:rgba(0,0,0,.72);color:var(--gold);
+  font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px;backdrop-filter:blur(2px);
+}
+.ccard .rate.nr{color:var(--sub)}
+.ccard .t{font-size:12px;margin-top:5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em}
+.ccard .d{font-size:10px;color:var(--sub)}
+
+/* ---------- anime-grid 喜好表 ---------- */
+.agrid{display:grid;gap:8px;margin-top:10px}
+.acell{background:var(--card2);border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color .15s;position:relative}
+.acell:hover{border-color:var(--acc)}
+.acell img{width:100%;aspect-ratio:120/163;object-fit:cover;display:block}
+.acell .lb{font-size:11px;color:var(--sub);text-align:center;padding:3px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acell.empty{aspect-ratio:120/187;position:relative}
+.acell.empty::after{content:"+";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--line)}
+.acell.empty:hover::after{color:var(--acc)}
+.apick{margin-top:10px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+.apick input{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px 12px;font-size:14px;outline:none}
+.apick input:focus{border-color:var(--acc)}
+.apickList{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px;max-height:300px;overflow:auto;margin:10px 0}
+.apickList .pi{cursor:pointer;text-align:center}
+.apickList .pi:hover img{border-color:var(--acc)}
+.apickList .pi img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.apickList .pi div{font-size:11px;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- toolbar / footer ---------- */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+footer{margin-top:36px;font-size:12px;color:var(--sub);text-align:center}
+footer details{max-width:720px;margin:14px auto 0;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px}
+footer summary{cursor:pointer;color:var(--acc2)}
+footer pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;overflow-x:auto;font-size:12px;margin:8px 0}
+footer code{color:var(--green)}
+
+/* ---------- misc ---------- */
+.fade{animation:fade .45s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#toast{
+  position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#222c3e;border:1px solid var(--line);color:var(--txt);padding:9px 18px;border-radius:99px;
+  font-size:13px;opacity:0;pointer-events:none;transition:.3s;z-index:9;
+}
+#toast.show{opacity:1;transform:translateX(-50%)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- embed mode ---------- */
+body.embed header,body.embed .hero,body.embed footer{display:none}
+body.embed .wrap{padding:10px 10px 30px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Bangumi <em>年鉴</em></h1>
+  <span class="tag" id="srcTag">镜像源</span>
+</header>
+
+<section class="card hero">
+  <div class="formrow">
+    <input id="uid" placeholder="Bangumi ID（用户名或数字 UID）" spellcheck="false">
+    <select id="type">
+      <option value="anime">动画</option>
+      <option value="book">书籍</option>
+      <option value="music">音乐</option>
+      <option value="game">游戏</option>
+      <option value="real">三次元</option>
+      <option value="all">全部类型</option>
+    </select>
+    <select id="year"><option value="all">全部年份</option></select>
+    <div class="seg" id="srcSeg">
+      <button data-s="mirror" class="on">镜像</button>
+      <button data-s="official">主站</button>
+    </div>
+    <button id="go">生成年鉴</button>
+  </div>
+  <div class="formrow" style="margin-top:8px">
+    <input id="mbase" placeholder="镜像根域（可选）：填你自己的 Bangumi 镜像地址，需支持 /v0 透传与 CORS；留空且本页恰好部署在镜像同域时自动使用同源" spellcheck="false" style="flex:1 1 300px;font-size:13px;padding:8px 12px;background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:10px;outline:none">
+  </div>
+  <div class="hint">只需填 ID 即可 · 数据源：<b>主站</b>直连 api.bgm.tv，或<b>镜像</b>（上方自填，自部署 bgm-proxy 同域可享聚合加速） · 数据 6 小时本地缓存 · 封面持久缓存（刷新/强刷不重下）</div>
+</section>
+
+<div id="prog"><i></i></div>
+<div id="ptext"></div>
+<div id="err"></div>
+
+<main id="report">
+  <div class="uhead fade">
+    <img id="uavatar" alt="">
+    <div>
+      <div class="nm" id="uname"></div>
+      <div class="sg" id="usign"></div>
+    </div>
+  </div>
+
+  <div class="stats fade" id="stats"></div>
+
+  <div class="grid2 fade">
+    <div class="chart"><h3 id="mtitle">月度完成分布</h3><div class="barswrap"><div class="bars" id="mbars"></div></div></div>
+    <div class="chart"><h3>评分分布</h3><div id="rbars"></div></div>
+  </div>
+
+  <div class="chart fade" style="margin-bottom:14px" id="tagbox">
+    <h3>高频标签 <span style="font-weight:400" id="tagnote"></span></h3>
+    <div class="tags" id="tags"></div>
+  </div>
+
+  <div class="chart fade" style="margin-bottom:6px">
+    <h3>评分最高 TOP10</h3>
+    <div class="toprow" id="top"></div>
+  </div>
+
+  <div class="chart fade" style="margin-bottom:6px">
+    <h3 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">生涯喜好表
+      <span style="font-weight:400">anime-grid 联动 · 点格子填片 · NSFW 放行</span>
+      <select id="agridSize" style="margin-left:auto;padding:4px 8px;font-size:12px"><option value="15">经典 15 格</option><option value="60">扩展 60 格</option></select>
+      <button class="ghost" id="agridAuto" style="padding:4px 10px;font-size:12px">按评分自动填</button>
+      <button class="ghost" id="agridDl" style="padding:4px 10px;font-size:12px">导出白底 PNG</button>
+    </h3>
+    <div class="agrid" id="agrid"></div>
+    <div class="apick" id="apick" style="display:none">
+      <div style="font-size:13px">为「<b id="apickLb" style="color:var(--acc)"></b>」选片 —— 当前列表内搜索；输入纯数字回车 = 按 Subject ID 填入；普通文字回车 = 直接写入格子</div>
+      <input id="apickQ" placeholder="搜索名称…">
+      <div class="apickList" id="apickList"></div>
+      <button class="ghost" id="apickClear" style="padding:4px 10px;font-size:12px">清空此格</button>
+      <button class="ghost" id="apickClose" style="padding:4px 10px;font-size:12px;margin-left:6px">收起</button>
+    </div>
+  </div>
+
+  <div class="toolbar fade">
+    <button class="ghost" id="expng">🖼 导出年度海报（一图全收录）</button>
+    <button class="ghost" id="exjson">⬇ 导出 JSON</button>
+    <button class="ghost" id="exmd">⬇ 导出 Markdown</button>
+    <button class="ghost" id="exprint">🖨 打印 / PDF</button>
+    <button class="ghost" id="refresh">↻ 强制刷新</button>
+    <button class="ghost" id="clearImgCache">🧹 清封面缓存</button>
+  </div>
+
+  <div id="wall"></div>
+</main>
+
+<footer>
+  数据来自 Bangumi 官方 API · 图片经 lain 镜像缓存 · 仅在浏览器本地处理<br>
+  <details>
+    <summary>开发者接入指南（iframe / postMessage / BGMReport API）</summary>
+    <p style="margin-top:8px">① iframe 嵌入（参数：<code>uid</code> <code>type</code> <code>year</code> <code>source</code> <code>embed=1</code>）：</p>
+    <pre>&lt;iframe src="<span id="emburl">…/report?uid=xxx&amp;type=anime&amp;year=all&amp;embed=1</span>"
+        style="width:100%;height:640px;border:0;border-radius:12px"&gt;&lt;/iframe&gt;</pre>
+    <p>② 页面会向父窗口 postMessage：<code>{event:'bgm-report-ready', data}</code> / <code>{event:'bgm-report-error', error}</code></p>
+    <p>③ 同窗口 JS 调用：<code>BGMReport.load('用户ID', {type:'anime', year:'all'})</code> 返回 Promise；数据可直接读任意支持 /v0 透传 + CORS 的镜像；搭配 <a href="https://github.com/makabaka11/bangumi-proxy-workers" target="_blank" rel="noopener">bgm-proxy</a> 类反代同域部署时，<code>/report/api?uid=&amp;type=</code> 聚合接口会被自动优先使用。</p>
+  </details>
+</footer>
+
+</div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ============ 常量 ============ */
+const TYPE_ST = { anime:"2", book:"1", music:"3", game:"4", real:"6", all:"" };
+const TYPE_LB = { anime:"动画", book:"书籍", music:"音乐", game:"游戏", real:"三次元", all:"全部类型" };
+const SAME = location.protocol.startsWith("http");
+let mirrorBase = (localStorage.getItem("bgr-mirror-base") || "").trim().replace(/\/+$/, "");
+function subjectURL(id){
+  return S.source==="official" ? `https://bgm.tv/subject/${id}` : `${mirrorBase||location.origin}/subject/${id}`;
+}
+const CACHE_TTL = 6 * 3600 * 1000;
+const $ = s => document.querySelector(s);
+
+/* ============ 状态 ============ */
+const S = { uid:"", type:"anime", year:"all", source:"mirror", user:null, items:[], loading:false };
+let lastKey = "", usedCache = false;
+
+/* ============ 工具 ============ */
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2600); }
+function setProg(p, txt){ $("#prog").classList.toggle("show", p!==null); if(p!==null) $("#prog i").style.width=(p*100).toFixed(1)+"%"; $("#ptext").textContent=txt||""; }
+function showError(msg, retry){
+  const e=$("#err"); e.style.display="block";
+  e.innerHTML="<b>出错了</b>"+msg+(retry?"<button id='retry'>切换数据源重试</button>":"");
+  if(retry) $("#retry").onclick=()=>{ e.style.display="none"; setSource(S.source==="mirror"?"official":"mirror"); load(); };
+}
+function post(ev, data){ try{ parent && parent.postMessage(Object.assign({event:ev, source:"bgm-report"}, data), "*"); }catch(_){} }
+function downloadBlob(blob, name){
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+}
+function esc(s){ return String(s??"").replace(/[&<>\"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ---- 封面持久缓存（Cache Storage：刷新/强刷都不重下，导出直接命中） ---- */
+const IMG_CACHE="bgr-img-v1";
+let _imgC=null;
+const blobURLs=new Map();
+function imgCache(){
+  if(!window.caches||!location.protocol.startsWith("http")) return null;
+  if(!_imgC) _imgC=caches.open(IMG_CACHE).catch(()=>null);
+  return _imgC;
+}
+async function coverURL(url){
+  if(!url) return url;
+  if(blobURLs.has(url)) return blobURLs.get(url);
+  const c=imgCache();
+  if(!c) return url;
+  try{
+    const cc=await c;
+    if(!cc) return url;
+    let hit=await cc.match(url);
+    if(!hit){
+      const r=await fetch(url,{mode:"cors"});
+      if(r.ok){ await cc.put(url, r.clone()); hit=r; }
+      else return url;
+    }
+    const b=await hit.blob();
+    const u=URL.createObjectURL(b);
+    blobURLs.set(url,u);
+    return u;
+  }catch(_){ return url; }
+}
+const _io=("IntersectionObserver" in window)? new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(!e.isIntersecting) return; _io.unobserve(e.target); hydrate(e.target); });
+},{rootMargin:"420px"}) : null;
+function hydrate(img){
+  const u=img.dataset.u;
+  if(!u||img.getAttribute("src")) return;
+  coverURL(u).then(u2=>{ img.src=u2; });
+}
+function watchImgs(scope){
+  (scope||document).querySelectorAll("img[data-u]").forEach(im=>{
+    if(_io) _io.observe(im); else hydrate(im);
+  });
+}
+
+/* 本地缓存 */
+function cacheKey(){ return "bgr_"+S.source+"_"+S.uid+"_"+S.type; }
+function cacheGet(k){ try{ const r=JSON.parse(localStorage.getItem(k)); if(r && Date.now()-r.ts<CACHE_TTL) return r; }catch(_){} return null; }
+function cacheSet(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(_){} }
+
+/* ============ 数据获取 ============ */
+async function load(force){
+  const uid=$("#uid").value.trim();
+  if(!uid){ toast("请先输入 Bangumi ID"); $("#uid").focus(); return; }
+  if(S.loading) return;
+  S.uid=uid; S.type=$("#type").value; S.source=S.source; S.year=$("#year").value;
+  S.loading=true; $("#go").disabled=true; $("#err").style.display="none"; $("#report").style.display="none";
+  $("#wall").innerHTML=""; setProg(0.02, "连接中…");
+  lastKey=cacheKey();
+
+  try{
+    let data = force ? null : cacheGet(lastKey);
+    usedCache = !!data;
+    if(!data){
+      data = S.source==="mirror" ? await fetchMirror() : await fetchPaginated("https://api.bgm.tv");
+      cacheSet(lastKey, data);
+    } else toast("已使用本地缓存（点「强制刷新」可更新）");
+
+    S.user=data.user; S.items=data.items;
+    fillYears();
+    // 年份：尊重当前选择（含"全部"），仅当选择已失效（数据里没有该年）才回退到最近一年
+    const want=$("#year").value;
+    const ys=[...new Set(S.items.map(i=>i.date.slice(0,4)))].sort().reverse();
+    S.year = (want==="all" || ys.includes(want)) ? want : (ys[0]||"all");
+    $("#year").value=S.year;
+    syncURL(); renderAll();
+    setProg(null);
+    post("bgm-report-ready", { uid:S.uid, type:S.type, year:S.year, total:S.items.length });
+  }catch(e){
+    setProg(null);
+    const msg = e && e.message ? e.message : String(e);
+    showError(esc(msg), true);
+    post("bgm-report-error", { uid:S.uid, error:msg });
+  }finally{
+    S.loading=false; $("#go").disabled=false;
+  }
+}
+
+/* 镜像源：优先 bgm-proxy 同域 /report/api 聚合（若可用），否则任意镜像 /v0 分页直读 */
+async function fetchMirror(){
+  if(!mirrorBase && !SAME) throw new Error("请先在上方填写镜像根域（需支持 /v0 透传与 CORS）");
+  const base=mirrorBase;
+  setProg(0.1,"尝试镜像聚合接口…");
+  const r=await fetch(`${base}/report/api?uid=${encodeURIComponent(S.uid)}&type=${S.type}`).catch(()=>null);
+  if(r&&r.ok){ try{ const j=await r.json(); if(j&&Array.isArray(j.items)) return j; }catch(_){}}
+  setProg(0.12,"镜像分页直读中…");
+  return fetchPaginated(base);
+}
+
+/* 通用分页直读：base 为镜像根域或官方 API，渐进渲染 */
+async function fetchPaginated(base){
+  const st = TYPE_ST[S.type];
+  const H = { accept:"application/json" };
+  const page = off => fetch(`${base}/v0/users/${encodeURIComponent(S.uid)}/collections?type=2&limit=50&offset=${off}${st?`&subject_type=${st}`:""}`, {headers:H});
+
+  setProg(0.05, "连接数据源…");
+  const ur = await fetch(`${base}/v0/users/${encodeURIComponent(S.uid)}`, {headers:H}).catch(()=>{ throw new Error("无法连接数据源（网络受限或镜像地址有误），请检查/切换数据源"); });
+  const user = ur.ok ? await ur.json() : { username:S.uid, nickname:S.uid };
+
+  const p1 = await page(0);
+  if(p1.status===404) throw new Error("用户不存在，检查一下 ID？");
+  if(p1.status===403) throw new Error("该用户收藏设置为隐私，无法查看");
+  if(!p1.ok) throw new Error("主站接口异常（"+p1.status+"），建议切换镜像源");
+  const j1 = await p1.json();
+  const total = j1.total||0, items=[...(j1.data||[])];
+  const pages = Math.min(Math.ceil(total/50), 60);
+  setProg(0.1, `已获取 ${items.length}/${total} 条`);
+
+  let next=1;
+  async function worker(){
+    while(next<=pages){
+      const my=next++;
+      let ok=false;
+      for(let t=0;t<3;t++){
+        try{
+          const r=await page(my*50);
+          if(r.status===429){ await new Promise(res=>setTimeout(res,1500*(t+1))); continue; }
+          if(r.ok){ const j=await r.json(); items.push(...(j.data||[])); ok=true; }
+          break;
+        }catch(_){ await new Promise(res=>setTimeout(res,800)); }
+      }
+      setProg(Math.min(0.9, items.length/Math.max(total,1)), `已获取 ${items.length}/${total} 条`);
+      if(ok && items.length % 150 < 50) renderAll(); // 渐进渲染
+    }
+  }
+  await Promise.all([worker(),worker(),worker()]);
+
+  const norm = it => {
+    const s=it.subject||{};
+    return { id:s.id||it.subject_id, name:s.name||"", name_cn:s.name_cn||"",
+      image:(s.images&&(s.images.large||s.images.common))||"",
+      rate:it.rate||0, date:(it.updated_at||"").slice(0,10), tags:it.tags||[], comment:it.comment||"" };
+  };
+  return { user:{ username:user.username||S.uid, nickname:user.nickname||user.username||S.uid,
+      avatar:((user.avatar&&user.avatar.large)||"") }, total, items:items.map(norm), ts:Date.now() };
+}
+
+/* ============ 渲染 ============ */
+function filtered(){
+  return S.year==="all" ? S.items : S.items.filter(i=>i.date.slice(0,4)===S.year);
+}
+function fillYears(){
+  const ys=[...new Set(S.items.map(i=>i.date.slice(0,4)))].sort().reverse();
+  const sel=$("#year"); const cur=sel.value;
+  sel.innerHTML='<option value="all">全部年份</option>'+ys.map(y=>`<option value="${y}">${y} 年</option>`).join("");
+  sel.value = ys.includes(cur)?cur:(cur||"all");
+}
+function renderAll(){
+  const R=$("#report"); R.style.display="block";
+  const items=filtered();
+  renderHead(); renderStats(items); renderMonth(items); renderRate(items); renderTags(items); renderTop(items); renderAgrid(); renderWall(items);
+}
+function renderHead(){
+  $("#uavatar").src = S.user && S.user.avatar ? S.user.avatar : "";
+  $("#uavatar").onerror = function(){ this.style.visibility="hidden"; };
+  $("#uavatar").style.visibility="visible";
+  $("#uname").textContent = (S.user&&(S.user.nickname||S.user.username)||S.uid) + " 的" + TYPE_LB[S.type] + "年鉴";
+  $("#usign").textContent = `@${S.user&&S.user.username||S.uid} · ${S.items.length} 条收藏 · ${usedCache?"本地缓存":"实时获取"}`;
+}
+function renderStats(items){
+  const rated=items.filter(i=>i.rate>0);
+  const avg=rated.length?(rated.reduce((a,b)=>a+b.rate,0)/rated.length):0;
+  const months=new Set(items.map(i=>i.date.slice(0,7)));
+  const cards=[
+    ["完成总数", items.length+" 部"],
+    ["评分均值", rated.length?avg.toFixed(1)+" / 10":"—"],
+    ["评分率", items.length?Math.round(rated.length/items.length*100)+"%":"—"],
+    ["9分神作", items.filter(i=>i.rate>=9).length+" 部"],
+    ["活跃月份", months.size+" 个月"],
+    ["未评分", (items.length-rated.length)+" 部"],
+  ];
+  $("#stats").innerHTML=cards.map(c=>`<div class="stat"><div class="v">${c[1]}</div><div class="k">${c[0]}</div></div>`).join("");
+}
+function renderMonth(items){
+  const cnt={};
+  if(S.year==="all"){
+    $("#mtitle").textContent="年度完成分布";
+    items.forEach(i=>{ const y=i.date.slice(0,4); cnt[y]=(cnt[y]||0)+1; });
+  }else{
+    $("#mtitle").textContent=`${S.year} 年月度完成分布`;
+    items.forEach(i=>{ const m=+i.date.slice(5,7); cnt[m]=(cnt[m]||0)+1; });
+  }
+  const keys = S.year==="all" ? Object.keys(cnt).sort() : Array.from({length:12},(_,i)=>i+1);
+  const max=Math.max(...keys.map(k=>cnt[k]||0), 1);
+  $("#mbars").innerHTML=keys.map(k=>{
+    const v=cnt[k]||0;
+    return `<div class="b" style="height:${Math.max(2, v/max*100)}%" data-v="${S.year==="all"?k+" 年":k+" 月"}：${v} 部"><span>${S.year==="all"?k.slice(2):k}</span></div>`;
+  }).join("");
+}
+function renderRate(items){
+  const cnt=Array(11).fill(0);
+  items.forEach(i=>cnt[i.rate]++);
+  const max=Math.max(...cnt,1);
+  let html="";
+  for(let r=10;r>=1;r--) html+=hbar(r+" 分", cnt[r], max);
+  html+=hbar("未评分", cnt[0], max);
+  $("#rbars").innerHTML=html;
+  function hbar(lab,v,mx){ return `<div class="hbar"><div class="lab">${lab}</div><div class="track"><div class="fill" style="width:${v/mx*100}%"></div></div><div class="num">${v||""}</div></div>`; }
+}
+let tagFilter=null;
+function renderTags(items){
+  const freq={};
+  items.forEach(i=>(i.tags||[]).forEach(t=>freq[t]=(freq[t]||0)+1));
+  const top=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,40);
+  $("#tagnote").textContent = top.length?`（共 ${top.length} 个，点击筛选）`:"（该范围内没有标签数据）";
+  $("#tagbox").style.display=top.length?"":"none";
+  const mx=top.length?top[0][1]:1;
+  $("#tags").innerHTML=top.map(([t,c])=>
+    `<span style="font-size:${(12+Math.sqrt(c/mx)*14).toFixed(1)}px" class="${t===tagFilter?"on":""}" data-t="${esc(t)}">${esc(t)}<sub style="color:var(--sub)"> ${c}</sub></span>`).join("");
+  $("#tags").querySelectorAll("span").forEach(s=>s.onclick=()=>{
+    tagFilter = tagFilter===s.dataset.t ? null : s.dataset.t;
+    renderWall(filtered()); toast(tagFilter?`已筛选标签「${tagFilter}」`:"已取消标签筛选");
+  });
+}
+function renderTop(items){
+  const top=[...items].sort((a,b)=>b.rate-a.rate || (a.date<b.date?-1:1)).filter(i=>i.rate>0).slice(0,10);
+  $("#top").innerHTML = top.length ? top.map(i=>`
+    <a class="tcard" href="${subjectURL(i.id)}" target="_blank" rel="noopener">
+      <img data-u="${esc(i.image)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{style:'width:110px;height:154px;border-radius:10px;background:var(--card2);border:1px solid var(--line)'}))">
+      <div class="t" title="${esc(i.name_cn||i.name)}">${esc(i.name_cn||i.name)}</div>
+      <div class="r">★ ${i.rate}</div>
+    </a>`).join("") : `<div style="color:var(--sub);font-size:13px;padding:8px 0">该范围内暂无评分作品</div>`;
+  watchImgs($("#top"));
+}
+function renderWall(items){
+  const wall=$("#wall");
+  let list=items;
+  if(tagFilter) list=list.filter(i=>(i.tags||[]).includes(tagFilter));
+  list=[...list].sort((a,b)=> b.date.localeCompare(a.date) || b.rate-a.rate);
+  if(!list.length){ wall.innerHTML=`<div style="text-align:center;color:var(--sub);padding:40px 0">${tagFilter?`没有带「${esc(tagFilter)}」标签的作品`:"这个范围下没有收藏记录"}</div>`; return; }
+
+  // 按年-月分组
+  const groups=new Map();
+  list.forEach(i=>{ const k=i.date.slice(0,7); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(i); });
+  wall.innerHTML="";
+  let gi=0; const gs=[...groups.entries()];
+  (function nextGroup(){
+    if(gi>=gs.length) return;
+    const [k,arr]=gs[gi++];
+    const [y,m]=k.split("-");
+    const sec=document.createElement("section");
+    sec.className="month fade";
+    sec.innerHTML=`<h3>${y} 年 ${+m} 月 <small>${arr.length} 部</small></h3><div class="gridwall"></div>`;
+    const grid=sec.querySelector(".gridwall");
+    let ii=0;
+    (function nextCards(){
+      const frag=document.createDocumentFragment();
+      for(let n=0;n<30&&ii<arr.length;n++,ii++){
+        const i=arr[ii];
+        const d=document.createElement("div");
+        d.className="ccard";
+        d.innerHTML=`<a href="${subjectURL(i.id)}" target="_blank" rel="noopener">
+          <img decoding="async" data-u="${esc(i.image)}" title="${esc(i.comment?("感想："+i.comment):"")}">
+          <span class="rate ${i.rate?"":"nr"}">${i.rate?"★"+i.rate:"未评"}</span></a>
+          <div class="t" title="${esc(i.name_cn||i.name)}">${esc(i.name_cn||i.name)}</div>
+          <div class="d">${i.date}</div>`;
+        d.querySelector("img").onerror=function(){ this.src="data:image/svg+xml,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='120' height='160'><rect width='100%' height='100%' fill='%231a2130'/></svg>`); };
+        frag.appendChild(d);
+      }
+      grid.appendChild(frag);
+      watchImgs(grid);
+      if(ii<arr.length) requestAnimationFrame(nextCards);
+      else { wall.appendChild(sec); requestAnimationFrame(nextGroup); }
+    })();
+  })();
+}
+
+/* ============ URL 同步 & 事件 ============ */
+function syncURL(){
+  const p=new URLSearchParams();
+  p.set("uid",S.uid); p.set("type",S.type); p.set("year",S.year); p.set("source",S.source);
+  if(new URLSearchParams(location.search).get("embed")==="1") p.set("embed","1");
+  try{ history.replaceState(null,"", location.pathname+"?"+p.toString()); }catch(_){}
+}
+function setSource(s){
+  S.source=s;
+  $("#srcSeg").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.s===s));
+  $("#srcTag").textContent = s==="mirror"?"镜像源":"主站源";
+}
+$("#srcSeg").addEventListener("click", e=>{
+  const b=e.target.closest("button"); if(!b||b.dataset.s===S.source) return;
+  setSource(b.dataset.s);
+  if($("#uid").value.trim()) load(true);
+});
+$("#go").onclick=()=>load(true);
+$("#refresh").onclick=()=>load(true);
+/* 镜像根域输入（用户自填，本地记忆） */
+{
+  const mb=$("#mbase");
+  mb.value=mirrorBase;
+  mb.addEventListener("change",()=>{
+    mirrorBase=mb.value.trim().replace(/\/+$/,"");
+    try{ localStorage.setItem("bgr-mirror-base",mirrorBase); }catch(_){}
+    toast(mirrorBase?("镜像地址已保存："+mirrorBase):"已清空镜像地址");
+  });
+}
+$("#clearImgCache").onclick=async()=>{
+  try{
+    let n=0;
+    if(window.caches){
+      const keys=await caches.keys();
+      const mine=keys.filter(k=>k.indexOf("bgr-img")===0);
+      await Promise.all(mine.map(k=>caches.delete(k)));
+      n=mine.length;
+    }
+    blobURLs.clear();
+    toast("封面缓存已清除（"+n+" 个缓存库），正在重新加载…");
+    setTimeout(()=>location.reload(), 700);
+  }catch(e){ toast("清除失败："+(e&&e.message||e)); }
+};
+$("#uid").addEventListener("keydown", e=>{ if(e.key==="Enter") load(true); });
+$("#year").addEventListener("change", ()=>{ S.year=$("#year").value; tagFilter=null; syncURL(); renderAll(); });
+$("#type").addEventListener("change", ()=>{ tagFilter=null; if($("#uid").value.trim()) load(true); });
+$("#exjson").onclick=()=>{
+  const out={ generator:"bgm-proxy yearly report", url:location.origin+"/report", uid:S.uid, user:S.user,
+    type:S.type, year:S.year, generated_at:new Date().toISOString(), items:filtered() };
+  downloadBlob(new Blob([JSON.stringify(out,null,2)],{type:"application/json"}), `bangumi-${S.uid}-${S.year}-${S.type}.json`);
+};
+$("#exmd").onclick=()=>{
+  const items=filtered(); const byYear=new Map();
+  items.forEach(i=>{ const y=i.date.slice(0,4); if(!byYear.has(y)) byYear.set(y,new Map()); byYear.get(y).push(i); });
+  let md="# Bangumi List\n";
+  [...byYear.entries()].sort((a,b)=>b[0].localeCompare(a[0])).forEach(([y,arr])=>{
+    md+=`\n## ${y} 年 (完成 ${arr.length} 部作品)\n`;
+    const byM={}; arr.forEach(i=>{ const m=+i.date.slice(5,7); (byM[m]=byM[m]||[]).push(i); });
+    Object.keys(byM).sort((a,b)=>a-b).forEach(m=>{
+      const list=byM[m];
+      md+=`\n### ${m} 月 (完成 ${list.length} 部作品)\n`;
+      const agg={}; list.forEach(i=>(agg[i.rate]=agg[i.rate]||[]).push(i));
+      Object.keys(agg).sort((a,b)=>b-a).forEach(r=>{
+        const g=agg[r];
+        md+=`\n${r>0?`${r} 分 (${g.length} 部作品)`:`未评分 (${g.length} 部作品)`}\n\n`;
+        g.forEach(i=>md+=`- ${i.name_cn||i.name}\n`);
+      });
+    });
+  });
+  downloadBlob(new Blob([md],{type:"text/markdown"}), `bangumi-${S.uid}-${S.year}-${S.type}.md`);
+  toast("Markdown 已导出");
+};
+$("#exprint").onclick=()=>window.print();
+
+/* ============ PNG 海报（纯 canvas 手绘，无外部依赖） ============ */
+function rr(g,x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+function loadImg(url,ms){
+  return new Promise(res=>{
+    if(!url) return res(null);
+    coverURL(url).then(u=>{
+      const img=new Image();
+      if(u===url) img.crossOrigin="anonymous"; // blob URL 已同源，无需 CORS
+      const h=setTimeout(()=>{ img.src=""; res(null); }, ms||6000);
+      img.onload=()=>{ clearTimeout(h); res(img); };
+      img.onerror=()=>{ clearTimeout(h); res(null); };
+      img.src=u;
+    }).catch(()=>res(null));
+  });
+}
+let __posterImgCache={};
+$("#expng").onclick=async()=>{
+  const items=filtered(); if(!items.length) return toast("没有可导出的数据");
+  try{
+    const list=[...items].sort((a,b)=> b.date.localeCompare(a.date) || b.rate-a.rate);
+    // ---- 布局：上半纯封面拼贴 + 下半片名索引，一图全收录 ----
+    const W=1080,M=40,G=5,bodyW=W-2*M;
+    const idxCols=list.length<=400?4:list.length<=800?5:6;
+    const idxFont=list.length<=400?15:list.length<=800?13:12;
+    const idxRow=list.length<=400?23:20;
+    const idxRows=Math.ceil(list.length/idxCols);
+    const idxColW=Math.floor((bodyW-(idxCols-1)*16)/idxCols);
+    const idxH=idxRows*idxRow+30;
+    let cw=Math.max(34,Math.min(180,Math.sqrt(bodyW*1100/Math.max(list.length,1)*3/4)));
+    const mosCols=Math.max(1,Math.floor((bodyW+G)/(cw+G)));
+    const mosRows=Math.ceil(list.length/mosCols);
+    const mosH=mosRows*(cw*4/3)+(mosRows-1)*G;
+    const mosY=170, idxY=mosY+mosH+46;
+    const H=Math.round(idxY+idxH+58);
+    const c=document.createElement("canvas"); c.width=W; c.height=H;
+    const g=c.getContext("2d");
+    const bg=g.createLinearGradient(0,0,W,H);
+    bg.addColorStop(0,"#12151d"); bg.addColorStop(.5,"#171225"); bg.addColorStop(1,"#1d1420");
+    g.fillStyle=bg; g.fillRect(0,0,W,H);
+    const glow=g.createRadialGradient(W*.85,110,10,W*.85,110,480);
+    glow.addColorStop(0,"rgba(240,145,153,.22)"); glow.addColorStop(1,"rgba(240,145,153,0)");
+    g.fillStyle=glow; g.fillRect(0,0,W,400);
+    g.fillStyle="#f09199"; g.fillRect(0,0,W,8);
+    // ---- 头部 ----
+    g.textAlign="left";
+    g.fillStyle="#f09199"; g.font="800 24px system-ui,sans-serif";
+    g.fillText("BANGUMI 年鉴 · "+TYPE_LB[S.type], M, 58);
+    g.fillStyle="#c9d2e0"; g.font="500 22px system-ui,sans-serif";
+    g.textAlign="right"; g.fillText("@"+((S.user&&S.user.username)||S.uid), W-M, 58);
+    g.textAlign="left";
+    g.fillStyle="#fff"; g.font="800 54px system-ui,sans-serif";
+    g.fillText(S.year==="all"?"全部年份":S.year+" 年", M-2, 124);
+    const rated=list.filter(i=>i.rate>0);
+    const avg=rated.length?(rated.reduce((a,b)=>a+b.rate,0)/rated.length):0;
+    g.font="600 22px system-ui,sans-serif"; g.fillStyle="#c9d2e0"; g.textAlign="right";
+    g.fillText(`完成 ${list.length} · 均分 ${rated.length?avg.toFixed(1):"—"} · 评分率 ${Math.round(rated.length/list.length*100)}% · 9分+ ${list.filter(i=>i.rate>=9).length}`, W-M, 116);
+    g.textAlign="left";
+    g.fillStyle="rgba(255,255,255,.12)"; g.fillRect(M,146,bodyW,1);
+    // ---- 封面加载 ----
+    const need=list.filter(it=>!__posterImgCache[it.id]);
+    if(need.length){
+      let idx=0, done=0;
+      const total=need.length;
+      toast(`加载封面 0/${total}…`);
+      async function w(){
+        while(idx<need.length){
+          const it=need[idx++];
+          __posterImgCache[it.id]=await loadImg(it.image,9000);
+          done++;
+          if(done%8===0||done===total) toast(`加载封面 ${done}/${total}…`);
+        }
+      }
+      await Promise.all(Array.from({length:Math.min(10,need.length)}, w));
+    }
+    // ---- 封面拼贴（纯图，空间利用率拉满）----
+    const mosOX=(bodyW-(mosCols*cw+(mosCols-1)*G))/2;
+    for(let i=0;i<list.length;i++){
+      const it=list[i], r=Math.floor(i/mosCols), ci=i%mosCols;
+      const x=M+mosOX+ci*(cw+G), y=mosY+r*(cw*4/3+G), covH=cw*4/3;
+      g.fillStyle="rgba(255,255,255,.06)"; rr(g,x,y,cw,covH,Math.min(8,cw/5)); g.fill();
+      const img=__posterImgCache[it.id];
+      if(img){
+        g.save(); rr(g,x,y,cw,covH,Math.min(8,cw/5)); g.clip();
+        const s=Math.max(cw/img.width,covH/img.height);
+        g.drawImage(img,x+(cw-img.width*s)/2,y+(covH-img.height*s)/2,img.width*s,img.height*s);
+        g.restore();
+      }else{
+        g.fillStyle="#242e40"; rr(g,x,y,cw,covH,Math.min(8,cw/5)); g.fill();
+        const chc=(it.name_cn||it.name||"?").slice(0,1);
+        g.fillStyle="#5a6a85"; g.font="700 "+Math.round(cw/3)+"px system-ui,sans-serif";
+        g.fillText(chc,x+cw/2-g.measureText(chc).width/2,y+covH/2+cw/6);
+      }
+      if(it.rate>0&&cw>=44){
+        g.font="700 "+Math.max(9,Math.round(cw*0.16))+"px system-ui,sans-serif";
+        const bw2=g.measureText("★"+it.rate).width+8;
+        g.fillStyle="rgba(0,0,0,.75)"; rr(g,x+cw-bw2-3,y+3,bw2,Math.max(14,cw*0.2),4); g.fill();
+        g.fillStyle="#f5c542"; g.fillText("★"+it.rate,x+cw-bw2,y+3+Math.max(12,cw*0.16));
+      }
+    }
+    // ---- 片名索引（每行：日期 + ★评分 + 片名，清晰可读）----
+    g.fillStyle="#f09199"; g.font="700 15px system-ui,sans-serif";
+    g.fillText("全作品索引 · 按收藏时间", M, idxY-16);
+    g.fillStyle="rgba(255,255,255,.12)"; g.fillRect(M+160,idxY-21,bodyW-160,1);
+    for(let i=0;i<list.length;i++){
+      const it=list[i], col=i%idxCols, row=Math.floor(i/idxCols);
+      const x=M+col*(idxColW+16), y=idxY+row*idxRow;
+      const ds=it.date.slice(2).replace(/-/g,".");
+      g.font="400 11px system-ui,sans-serif"; g.fillStyle="#5f6c80"; g.textAlign="left";
+      g.fillText(ds, x, y);
+      const dw=g.measureText(ds).width;
+      g.font="700 "+idxFont+"px system-ui,sans-serif";
+      const rt=it.rate>0?("★"+it.rate):"·";
+      g.fillStyle=it.rate>=8?"#f5c542":it.rate>0?"#c9a227":"#4a5568";
+      g.fillText(rt, x+dw+6, y);
+      const rw=g.measureText(rt).width;
+      g.font=(idxFont-1)+"px system-ui,sans-serif"; g.fillStyle="#c9d3e0";
+      let t=it.name_cn||it.name||"";
+      const avail=idxColW-dw-rw-14;
+      while(t&&g.measureText(t).width>avail) t=t.slice(0,-1);
+      if(t!==(it.name_cn||it.name)&&t) t+="…";
+      g.fillText(t, x+dw+rw+8, y);
+    }
+    // ---- 页脚 ----
+    g.fillStyle="rgba(255,255,255,.35)"; g.font="400 20px system-ui,sans-serif";
+    g.fillText(`共 ${list.length} 部 · ${new Date().toLocaleDateString("zh-CN")} · ${location.host||"本地"}`, M, H-24);
+    g.textAlign="right"; g.fillText("一图全收录", W-M, H-24); g.textAlign="left";
+    c.toBlob(b=>{
+      if(!b) return toast("海报生成失败");
+      downloadBlob(b, `bangumi-poster-${S.uid}-${S.year}-${S.type}.png`);
+      toast(`海报已导出（${list.length} 部·一图全收录）`);
+    }, "image/png");
+  }catch(e){ toast("海报生成失败："+(e&&e.message||e)); }
+};
+/* ============ 嵌入 API（供其他 app 集成） ============ */
+
+/* ============ 生涯喜好表（itorr/anime-grid 联动 · NSFW 不筛除） ============ */
+const GRID_TXT15=`入坑作
+最喜欢
+看最多次
+最想安利
+
+最佳剧情
+最佳画面
+最佳配乐
+最佳配音
+
+最治愈
+最感动
+最虐心
+最被低估
+
+最过誉
+最离谱
+最讨厌`.trim().split(/\n+/g);
+const GRID_TXT60=`入坑作 最喜欢 最有的聊 看最多次 最想安利 最一眼缘 花最多钱 最有创作欲 最想有人陪看 喜欢但没看完 最有对线欲 精神支柱 最治愈 最搞笑 最感动 最热血 最轻松 扭的最厉害 最虐心 最震撼 最抽象 最写实 最恐怖 最电波 最佳剧情 最佳画面 最佳配乐 最佳配音 最佳音乐 最血腥暴力 最佳恋爱 最佳战斗 最佳奇幻 最佳科幻 最佳悬疑 最佳智斗 最佳原创 最佳改编 最佳漫改 最佳小说改 最佳游戏改 最佳剧场版 小众最爱 最爱画风 最爱长篇 最久待补 最弃而不舍 最意犹未尽 热门最烦 最烦画风 最爱泡面 常听说从未看 最难安利 最晦涩难懂 最期续作 最胃疼 最被低估 最过誉 最莫名其妙 最讨厌`.trim().split(/\s+/g);
+const AG={size:15,slots:[],cur:-1,loadedKey:""};
+function agKey(){ return `bgr_agrid_${S.uid}_${S.type}_${AG.size}`; }
+function agLoad(){
+  const k=agKey(); if(AG.loadedKey===k) return;
+  AG.loadedKey=k; AG.slots=new Array(AG.size).fill(null);
+  try{
+    const raw=JSON.parse(localStorage.getItem(k));
+    if(Array.isArray(raw)&&raw.length===AG.size) AG.slots=raw;
+  }catch(_){}
+}
+function agSave(){ try{ localStorage.setItem(agKey(), JSON.stringify(AG.slots)); }catch(_){} }
+function agTypes(){ return AG.size===15?GRID_TXT15:GRID_TXT60; }
+function agCols(){ return AG.size===15?5:6; }
+function renderAgrid(){
+  agLoad();
+  const box=$("#agrid");
+  box.style.gridTemplateColumns=`repeat(${agCols()},1fr)`;
+  const tp=agTypes();
+  box.innerHTML=AG.slots.map((s,i)=> s
+    ? `<div class="acell" data-i="${i}" title="${esc((s.text)||((s.name||"")+"（"+tp[i]+"）"))}"><img data-u="${esc(s.image||"")}"${s.image?"":" style='display:none'"}><div class="lb">${esc(tp[i]||"")}</div></div>`
+    : `<div class="acell empty" data-i="${i}" title="${esc(tp[i])}"><div class="lb" style="position:absolute;bottom:0;left:0;right:0">${esc(tp[i]||"")}</div></div>`
+  ).join("");
+  watchImgs(box);
+  box.querySelectorAll(".acell").forEach(el=>el.onclick=()=>{
+    AG.cur=+el.dataset.i;
+    $("#apick").style.display="block";
+    $("#apickLb").textContent=agTypes()[AG.cur]||("第 "+(AG.cur+1)+" 格");
+    $("#apickQ").value="";
+    apickRender("");
+    $("#apickQ").focus();
+  });
+}
+function apickRender(q){
+  const el=$("#apickList");
+  let list=[...filtered()];
+  if(q) list=list.filter(i=>((i.name_cn||"")+"‿"+(i.name||"")).toLowerCase().includes(q.toLowerCase()));
+  list.sort((a,b)=>b.rate-a.rate||b.date.localeCompare(a.date));
+  list=list.slice(0,36);
+  el.innerHTML=list.length?list.map(i=>
+    `<div class="pi" data-id="${i.id}"><img data-u="${esc(i.image)}"><div title="${esc(i.name_cn||i.name)}">${esc(i.name_cn||i.name)}</div></div>`).join("")
+    :`<div style="color:var(--sub);font-size:13px;grid-column:1/-1">列表里没搜到 —— 可输入 Subject ID（纯数字）回车，或输入普通文字回车直接写进格子</div>`;
+  watchImgs(el);
+  el.querySelectorAll(".pi").forEach(p=>p.onclick=()=>{
+    const it=filtered().find(x=>String(x.id)===p.dataset.id);
+    if(it){ AG.slots[AG.cur]={id:it.id,name:it.name_cn||it.name,image:it.image}; agSave(); renderAgrid(); agClosePick(); toast("已填入「"+(it.name_cn||it.name)+"」"); }
+  });
+}
+function agClosePick(){ $("#apick").style.display="none"; AG.cur=-1; }
+$("#apickQ").addEventListener("keydown", async e=>{
+  if(e.key!=="Enter") return;
+  const v=$("#apickQ").value.trim(); if(!v||AG.cur<0) return;
+  if(/^\d+$/.test(v)){           // Subject ID → 按当前数据源查询（NSFW 同样直出）
+    const ab = S.source==="official" ? "https://api.bgm.tv" : (mirrorBase||location.origin);
+    try{
+      const r=await fetch(`${ab}/v0/subjects/${v}`);
+      if(!r.ok) return toast("查不到该 Subject ID（"+r.status+"）");
+      const j=await r.json();
+      AG.slots[AG.cur]={id:j.id,name:j.name_cn||j.name,image:(j.images&&(j.images.large||j.images.common))||""};
+    }catch(_){ return toast("查询失败，稍后再试"); }
+  }else{
+    AG.slots[AG.cur]={text:v.replace(/,/g,"")};
+  }
+  agSave(); renderAgrid(); agClosePick();
+});
+$("#apickQ").addEventListener("input", ()=>apickRender($("#apickQ").value.trim()));
+$("#apickClear").onclick=()=>{ if(AG.cur<0) return; AG.slots[AG.cur]=null; agSave(); renderAgrid(); agClosePick(); };
+$("#apickClose").onclick=agClosePick;
+$("#agridSize").onchange=()=>{ AG.size=+$("#agridSize").value; AG.loadedKey=""; renderAgrid(); };
+$("#agridAuto").onclick=()=>{
+  const used=new Set(AG.slots.filter(s=>s&&s.id).map(s=>String(s.id)));
+  const pool=[...filtered()].sort((a,b)=>b.rate-a.rate||b.date.localeCompare(a.date)).filter(i=>!used.has(String(i.id)));
+  let pi=0;
+  for(let i=0;i<AG.size&&pi<pool.length;i++){
+    if(AG.slots[i]) continue;
+    const it=pool[pi++];
+    AG.slots[i]={id:it.id,name:it.name_cn||it.name,image:it.image};
+  }
+  agSave(); renderAgrid();
+  toast("已按评分从高到低填充空格（可点击任意格子继续调整）");
+};
+$("#agridDl").onclick=async()=>{
+  const col=agCols(), row=AG.size/col, types=agTypes();
+  const sc=2, body=20, contentW=col*120, contentH=row*187, colW=120, rowH=187, titleH=40, fontH=24;
+  const imgW=colW-2, imgH=rowH-fontH, ratio=imgW/imgH;
+  const c=document.createElement("canvas");
+  c.width=(contentW+body*2)*sc; c.height=(contentH+body*2+titleH)*sc;
+  const g=c.getContext("2d");
+  g.fillStyle="#FFF"; g.fillRect(0,0,c.width,c.height);
+  g.textAlign="left"; g.font=`${9*sc}px sans-serif`; g.fillStyle="#AAA"; g.textBaseline="middle";
+  g.fillText(`布局灵感 itorr/anime-grid · 动画信息来自番组计划 · ${location.host||"本地"}`, 19*sc, c.height-10*sc);
+  g.textBaseline="alphabetic";
+  g.scale(sc,sc); g.translate(body,body+titleH);
+  g.fillStyle="#222"; g.textAlign="center";
+  g.font="bold 32px sans-serif";
+  g.fillText("动画生涯个人喜好表"+(AG.size===60?"（扩展版）":""), contentW/2, -26);
+  g.lineWidth=2; g.strokeStyle="#222";
+  for(let y=0;y<=row;y++){
+    g.globalAlpha=1; g.beginPath(); g.moveTo(0,y*rowH); g.lineTo(contentW,y*rowH); g.stroke();
+    if(y===row) continue;
+    g.globalAlpha=.2; g.beginPath(); g.moveTo(0,y*rowH+rowH-fontH); g.lineTo(contentW,y*rowH+rowH-fontH); g.stroke();
+  }
+  g.globalAlpha=1;
+  for(let x=0;x<=col;x++){ g.beginPath(); g.moveTo(x*colW,0); g.lineTo(x*colW,contentH); g.stroke(); }
+  g.font="16px sans-serif";
+  for(let i=0;i<AG.size;i++){
+    g.fillStyle="#222";
+    g.fillText(types[i]||"", (i%col)*colW+colW/2, Math.floor(i/col)*rowH+rowH-fontH/2+5);
+  }
+  toast("加载封面中…");
+  const imgs=await Promise.all(AG.slots.map(s=>s&&s.image?loadImg(s.image,8000):Promise.resolve(null)));
+  for(let i=0;i<AG.size;i++){
+    const x=(i%col)*colW, y=Math.floor(i/col)*rowH, s=AG.slots[i];
+    if(!s){ g.fillStyle="#FFF"; g.fillRect(x+1,y+1,imgW,imgH);
+      g.fillStyle="#d3d3d3"; g.fillRect(x+1,y+imgH-1,imgW,2); continue; }
+    if(s.text){ g.fillStyle="#FFF"; g.fillRect(x+1,y+1,imgW,imgH);
+      g.fillStyle="#222"; g.font="bold 32px sans-serif";
+      g.fillText(s.text.slice(0,8), x+colW/2, y+rowH/2-4, imgW-10);
+      g.font="16px sans-serif"; continue; }
+    g.fillStyle="#FFF"; g.fillRect(x+1,y+1,imgW,imgH);
+    const img=imgs[i];
+    if(img){
+      let sw,sh,sx,sy;
+      const r=img.width/img.height;
+      if(r<ratio){ sw=img.width; sh=img.width/imgW*imgH; sx=0; sy=img.height-sh; }
+      else{ sh=img.height; sw=img.height/imgH*imgW; sx=(img.width-sw); sy=0; }
+      g.drawImage(img,sx,sy,sw,sh,x+1,y+1,imgW,imgH);
+    }else{
+      g.fillStyle="#eee"; g.fillRect(x+1,y+1,imgW,imgH);
+      g.fillStyle="#999"; g.font="bold 40px sans-serif";
+      g.fillText("?",x+colW/2-10,y+rowH/2);
+      g.font="16px sans-serif";
+    }
+  }
+  c.toBlob(b=>{
+    if(!b) return toast("导出失败");
+    downloadBlob(b, `anime-grid-${S.uid||"me"}-${AG.size}.png`);
+    toast("喜好表白底 PNG 已导出");
+  }, "image/png");
+};
+
+/* ============ 嵌入 API（供其他 app 集成） ============ */
+window.BGMReport = {
+  version:"1.0",
+  async load(uid, opts){
+    if(uid){ $("#uid").value=uid; }
+    if(opts && opts.type) $("#type").value=opts.type;
+    if(opts && opts.source) setSource(opts.source);
+    if(opts && opts.year) $("#year").value=opts.year;
+    await load(!!(opts&&opts.force));
+    return { uid:S.uid, type:S.type, year:S.year, user:S.user, total:S.items.length, items:filtered() };
+  },
+  getData(){ return { uid:S.uid, type:S.type, year:S.year, user:S.user, items:filtered() }; }
+};
+addEventListener("message", e=>{
+  const d=e.data||{};
+  if(d.action==="load" && d.uid) window.BGMReport.load(d.uid, d);
+});
+
+/* ============ 启动 ============ */
+(function init(){
+  const p=new URLSearchParams(location.search);
+  const emb=p.get("embed")==="1";
+  if(emb) document.body.classList.add("embed");
+  $("#emburl").textContent=location.origin+"/report?uid=用户ID&type=anime&year=all&embed=1";
+  if(p.get("source")==="official") setSource("official");
+  else if(p.get("source")==="mirror") setSource("mirror");
+  else setSource(SAME ? "mirror" : "official"); // 同域部署默认镜像，独立部署默认官方
+  if(p.get("uid")){
+    $("#uid").value=p.get("uid");
+    if(p.get("type")) $("#type").value=p.get("type");
+    if(p.get("year")) $("#year").value=p.get("year");
+    load(false);
+  }
+})();
+</script>
+</body>
+</html>
