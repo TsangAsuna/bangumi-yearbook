@@ -18,6 +18,40 @@
 - **嵌入其他 app**：iframe（`?uid=&type=&year=&source=&embed=1`）、postMessage 事件（`bgm-report-ready` / `bgm-report-error`）、同窗口 `BGMReport.load()` API
 - **流畅**：封面 Cache Storage 持久缓存（强刷不重下，带一键清除按钮）、数据 localStorage 6 小时缓存、渐进渲染、懒加载
 
+## 架构与代码对应
+
+**一个文件就是整个项目**：`index.html` 包含全部 HTML 结构、CSS 样式与 JS 逻辑，无框架、无构建步骤、无第三方依赖、无后端。
+
+```
+浏览器（index.html）
+ ├─ 数据层
+ │   ├─ 官方直连   api.bgm.tv /v0/users/{id}/collections（分页，429 自动退避）
+ │   ├─ 自填镜像   {镜像根域}/v0/...（任意支持 /v0 透传 + CORS 的 Bangumi 镜像）
+ │   └─ 聚合加速   {同域 bgm-proxy}/report/api（自动探测，命中则一次请求拉全量）
+ ├─ 渲染层（纯 DOM，渐进渲染 + IntersectionObserver 懒加载）
+ │   ├─ 统计卡 / 月度柱状图 / 评分分布 / 标签云 / TOP10 / 按月封面墙
+ │   └─ 生涯喜好表（15/60 格，本地选片 + Subject ID 查询 + 按评分自动填）
+ ├─ 缓存层
+ │   ├─ localStorage     收藏数据 6h + 镜像地址 + 喜好表存档
+ │   └─ Cache Storage    封面持久缓存（强刷不重下，可一键清除）
+ └─ 导出层（canvas 手绘 + Blob，零第三方库）
+     ├─ 一图全收录海报（上半封面拼贴 + 下半片名索引）
+     ├─ 白底喜好表 PNG（经典网格风格）
+     └─ JSON / Markdown（兼容原版格式）/ 打印 PDF（window.print）
+```
+
+| index.html 内的代码块 | 对应职责 |
+|---|---|
+| `<style>` | 暗色主题、响应式网格、打印样式、embed 模式 |
+| 常量与状态（TYPE_ST / S / mirrorBase） | 类型映射、全局状态、镜像根域（用户自填，localStorage 记忆） |
+| fetchPaginated() / fetchMirror() | 分页直读与聚合探测、429 退避、渐进渲染回调 |
+| coverURL() / watchImgs() / loadImg() | 封面缓存管线（Cache Storage → blob URL） |
+| renderHead / Stats / Month / Rate / Tags / Top / Wall | 各区块渲染与年份、标签筛选 |
+| AG / renderAgrid() | 生涯喜好表状态机与交互 |
+| #expng / #agridDl / #exjson / #exmd | 四种导出的 canvas 绘制与文件生成 |
+| window.BGMReport / postMessage | 供其他 app 嵌入的 JS API 与事件协议 |
+| init() | URL 参数解析（uid/type/year/source/embed）与默认数据源判定 |
+
 ## 数据源说明
 
 | 源 | 地址 | 适用 |
